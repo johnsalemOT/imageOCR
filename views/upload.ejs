@@ -3,33 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upload PDF - Terreact OCR</title>
+  <title>Upload PDF - OCR Processor</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex items-center justify-center">
 
-  <div class="text-center p-10 bg-white rounded-2xl shadow-xl max-w-lg">
-    <h1 class="text-3xl font-bold text-blue-600 mb-6">Upload PDF</h1>
+  <div class="text-center p-10 bg-white rounded-2xl shadow-xl max-w-xl">
+    <h1 class="text-3xl font-bold text-blue-600 mb-6">Upload File for OCR</h1>
 
-    <form id="uploadForm" action="/getTextFrmImg" method="POST" enctype="multipart/form-data">
-      <input type="file" name="pdfFile" accept=".pdf" 
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".pdf, .png, .jpeg, .jpg" 
              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
              file:rounded-lg file:border-0 file:text-sm file:font-semibold
              file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-6" required />
 
-      <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition duration-300">
-        Process File
-      </button>
+      <div class="flex justify-between gap-4">
+        <button type="button" id="visionBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 w-1/2">
+          Google Vision
+        </button>
+        <button type="button" id="tesseractBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 w-1/2">
+          Tesseract
+        </button>
+      </div>
     </form>
 
     <div id="loading" class="hidden mt-4 text-blue-500">Processing... Please wait.</div>
+
+    <div id="result" class="mt-4 hidden">
+      <h2 class="text-lg font-semibold mb-2 text-gray-700">Extracted Text:</h2>
+      <pre class="bg-gray-100 p-4 rounded text-left text-sm overflow-auto max-h-[400px]" id="extractedText"></pre>
+    </div>
   </div>
 
   <script>
     const form = document.getElementById('uploadForm');
+    const visionBtn = document.getElementById('visionBtn');
+    const tesseractBtn = document.getElementById('tesseractBtn');
     const loading = document.getElementById('loading');
-    form.addEventListener('submit', () => {
+    const resultBox = document.getElementById('result');
+    const extractedText = document.getElementById('extractedText');
+
+    const submitForm = async (endpoint) => {
       loading.classList.remove('hidden');
+      resultBox.classList.add('hidden');
+
+      const formData = new FormData(form);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      extractedText.textContent = data.result;
+      
+      loading.classList.add('hidden');
+      resultBox.classList.remove('hidden');
+    }
+
+    visionBtn.addEventListener('click', () => {
+      submitForm('/extract/googlevision');
+    });
+
+    tesseractBtn.addEventListener('click', () => {
+      submitForm('/extract/tesseract');
     });
   </script>
 
